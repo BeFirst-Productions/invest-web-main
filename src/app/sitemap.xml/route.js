@@ -1,5 +1,3 @@
-import { blogPosts } from '@/data/blogData';
-// export const dynamic = 'force-dynamic';
 export const dynamic = 'force-static';
 export const revalidate = 3600;
 
@@ -90,15 +88,23 @@ export async function GET() {
     </url>
   `).join('');
 
-  // Create sitemap records for dynamic blogs (loaded dynamically)
-  const blogRecords = blogPosts.map((post) => `
+  let blogRecords = '';
+  try {
+    const res = await fetch('http://localhost:8080/public/v1/blog/get-blogs', { next: { revalidate: 3600 } });
+    const data = await res.json();
+    if (data.success && data.data) {
+      blogRecords = data.data.map((post) => `
     <url>
-      <loc>${domain}/blogs/${post.slug}</loc>
+      <loc>${domain}/blogs/${post.url}</loc>
       <lastmod>${currentDate}</lastmod>
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
     </url>
   `).join('');
+    }
+  } catch (error) {
+    console.error("Failed to fetch blogs for sitemap:", error);
+  }
 
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

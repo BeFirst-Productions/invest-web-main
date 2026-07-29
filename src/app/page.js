@@ -22,7 +22,29 @@ export async function generateMetadata() {
   return seo;
 }
 
-export default function HomePage() {
+import { blogPosts as mockBlogPosts } from '@/data/blogData';
+
+// Fetch blogs from backend
+async function getBlogsData() {
+    try {
+        const res = await fetch('http://localhost:8080/public/v1/blog/get-blogs', {
+            next: { revalidate: 60 }
+        });
+        const data = await res.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+            return data.data;
+        }
+    } catch (error) {
+        console.error("Failed to fetch blogs:", error);
+    }
+    // Fallback to mock data
+    return mockBlogPosts;
+}
+
+export default async function HomePage() {
+  const blogPosts = await getBlogsData();
+
   return (
     <main>
       <Hero />
@@ -37,7 +59,7 @@ export default function HomePage() {
       <Schedule />
       <Pricing />
       <Testimonials />
-      <Blog />
+      <Blog blogPosts={blogPosts} />
       <SetupCost />
       <FAQ />
       <SocialMedia />

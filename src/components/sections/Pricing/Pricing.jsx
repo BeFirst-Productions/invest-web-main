@@ -1,17 +1,49 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SectionBadge from "@/components/ui/SectionBadge";
 import PricingCard from "@/components/ui/PricingCard";
-import { pricingPlans } from "@/data/pricingData";
 import { gsap } from "@/lib/gsap";
 import SplitText from "@/components/ui/SplitText";
 
 export default function Pricing() {
   const containerRef = useRef(null);
   const cardsRef = useRef([]);
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/public/v1/packages/common-packages`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          // Transform backend data to match the PricingCard props
+          const formattedPlans = data.data.map((pkg, index) => ({
+            id: pkg._id,
+            title: pkg.title,
+            description: pkg.description,
+            price: `AED ${Number(pkg.amount).toLocaleString()}`,
+            features: pkg.points,
+            featured: index === 1, // Make the middle card featured (maroon background)
+            ctaText: pkg.ctaText || "Let's Do This",
+            ctaHref: pkg.ctaHref || "#contact"
+          }));
+          setPlans(formattedPlans);
+        }
+      } catch (err) {
+        console.error("Failed to fetch packages:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  useEffect(() => {
+    if (loading || plans.length === 0) return;
+
     const ctx = gsap.context(() => {
       let mm = gsap.matchMedia();
 
@@ -66,32 +98,47 @@ export default function Pricing() {
               },
             },
           );
+        } else if (cards.length > 0) {
+          // If fewer than 3 cards, do a simple fade-in so they still animate
+          gsap.from(cards, {
+            y: 40,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.15,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: cards[0],
+              start: "top 95%",
+            },
+          });
         }
       });
 
       mm.add("(max-width: 1023px)", () => {
         // Mobile simple entry
         cardsRef.current.forEach((card) => {
-          gsap.fromTo(
-            card,
-            { y: 40, opacity: 0 },
-            {
-              y: 0,
-              opacity: 1,
-              duration: 1,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: card,
-                start: "top 95%",
+          if (card) {
+            gsap.fromTo(
+              card,
+              { y: 40, opacity: 0 },
+              {
+                y: 0,
+                opacity: 1,
+                duration: 1,
+                ease: "power2.out",
+                scrollTrigger: {
+                  trigger: card,
+                  start: "top 95%",
+                },
               },
-            },
-          );
+            );
+          }
         });
       });
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [loading, plans]);
 
   return (
     <section
@@ -104,7 +151,7 @@ export default function Pricing() {
         <SplitText
           tag="h2"
           className="font-sans text-[28px] md:text-[36px] lg:text-[40px] font-semibold leading-[1.25] text-[#111111] tracking-tight max-w-[620px]"
-          text="Choose the right UAE  license package for  business setup "
+          text="Choose the right UAE license package for business setup "
           delay={30}
           duration={0.8}
           ease="power3.out"
@@ -119,23 +166,32 @@ export default function Pricing() {
 
       {/* Cards grid — 1 col on mobile, 3 cols on lg+ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px] lg:gap-[24px] items-stretch max-w-[1200px] mx-auto">
-        {pricingPlans.map((plan, index) => (
-          <div
-            key={plan.id}
-            ref={(el) => (cardsRef.current[index] = el)}
-            className="opacity-0" // Prevent flash before GSAP kicks in
-          >
-            <PricingCard
-              title={plan.title}
-              description={plan.description}
-              price={plan.price}
-              features={plan.features}
-              featured={plan.featured}
-              ctaText={plan.ctaText}
-              ctaHref={plan.ctaHref}
-            />
+        {loading ? (
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 py-10">
+            Loading packages...
           </div>
-        ))}
+        ) : plans.length > 0 ? (
+          plans.map((plan, index) => (
+            <div
+              key={plan.id}
+              ref={(el) => (cardsRef.current[index] = el)}
+            >
+              <PricingCard
+                title={plan.title}
+                description={plan.description}
+                price={plan.price}
+                features={plan.features}
+                featured={plan.featured}
+                ctaText={plan.ctaText}
+                ctaHref={plan.ctaHref}
+              />
+            </div>
+          ))
+        ) : (
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 py-10">
+            No packages available at the moment.
+          </div>
+        )}
       </div>
     </section>
   );

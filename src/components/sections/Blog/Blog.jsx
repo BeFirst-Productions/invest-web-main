@@ -3,7 +3,6 @@
 import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { blogPosts } from '@/data/blogData';
 import SectionBadge from '@/components/ui/SectionBadge';
 import SectionContainer from '@/components/layout/SectionContainer';
 import ViewMoreButton from '@/components/ui/ViewMoreButton';
@@ -22,10 +21,15 @@ const ArrowRight = () => (
 );
 
 
-export default function Blog() {
+export default function Blog({ blogPosts = [] }) {
   const scrollRef = useRef(null);
   const rafRef = useRef(0);
   const pausedRef = useRef(false);
+
+  // If there are no blogs at all, we could return null or empty state, but let's just render the header and an empty message or skip.
+  if (blogPosts.length === 0) {
+      return null;
+  }
 
   if (blogPosts.length <= 2) {
     return (
@@ -61,13 +65,13 @@ export default function Blog() {
 
         {blogPosts.length === 1 ? (
           <Link 
-            href={`/blogs/${blogPosts[0].slug}`}
+            href={`/blogs/${blogPosts[0].url}`}
             className="group block bg-[#FAF9F6] rounded-[24px] overflow-hidden border border-[#F0EFEA] hover:border-[#A2064F]/30 shadow-sm hover:shadow-md transition-all duration-500"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               <div className="lg:col-span-7 relative w-full h-[260px] md:h-[400px] lg:h-[480px] overflow-hidden">
                 <Image
-                  src={blogPosts[0].image}
+                  src={blogPosts[0].image || "/images/placeholder-blog.jpg"}
                   alt={blogPosts[0].title}
                   fill
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -80,7 +84,7 @@ export default function Blog() {
               <div className="lg:col-span-5 p-[28px] md:p-[40px] lg:p-[48px] flex flex-col justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-[12px] mb-[20px]">
-                    {blogPosts[0].tags.map((tag) => (
+                    {(blogPosts[0].tags || []).map((tag) => (
                       <span
                         key={tag}
                         className="px-[12px] py-[4.5px] bg-[#A2064F]/10 rounded-full text-[11px] font-bold text-[#A2064F] tracking-wider uppercase font-sans"
@@ -88,9 +92,11 @@ export default function Blog() {
                         {tag}
                       </span>
                     ))}
-                    <span className="w-[4px] h-[4px] rounded-full bg-[#CCCCCC]" />
+                    {(blogPosts[0].tags && blogPosts[0].tags.length > 0) && (
+                        <span className="w-[4px] h-[4px] rounded-full bg-[#CCCCCC]" />
+                    )}
                     <span className="text-[12px] text-[#666666] font-medium font-sans">
-                      {blogPosts[0].date}
+                      {blogPosts[0].createdAt ? new Date(blogPosts[0].createdAt).toLocaleDateString() : 'Recent'}
                     </span>
                   </div>
 
@@ -99,7 +105,7 @@ export default function Blog() {
                   </h3>
 
                   <p className="text-[13px] md:text-[15px] text-[#555555] leading-[1.65] mb-[32px] font-sans line-clamp-4">
-                    {blogPosts[0].description}
+                    {blogPosts[0].excerpt || blogPosts[0].metaDescription || "Read more about this topic..."}
                   </p>
                 </div>
 
@@ -116,13 +122,13 @@ export default function Blog() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-[24px] lg:gap-[32px]">
             {blogPosts.map((post) => (
               <Link 
-                key={post.id}
-                href={`/blogs/${post.slug}`}
+                key={post._id || post.url}
+                href={`/blogs/${post.url}`}
                 className="group flex flex-col bg-[#FAF9F6] rounded-[24px] overflow-hidden border border-[#F0EFEA] hover:border-[#A2064F]/30 shadow-sm hover:shadow-md transition-all duration-500"
               >
                 <div className="relative w-full h-[220px] md:h-[280px] lg:h-[320px] overflow-hidden">
                   <Image
-                    src={post.image}
+                    src={post.image || "/images/placeholder-blog.jpg"}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -134,7 +140,7 @@ export default function Blog() {
                 <div className="p-[24px] md:p-[32px] flex flex-col justify-between flex-grow">
                   <div>
                     <div className="flex flex-wrap items-center gap-[12px] mb-[16px]">
-                      {post.tags.map((tag) => (
+                      {(post.tags || []).map((tag) => (
                         <span
                           key={tag}
                           className="px-[10px] py-[3.5px] bg-[#A2064F]/10 rounded-full text-[10px] font-bold text-[#A2064F] tracking-wider uppercase font-sans"
@@ -142,9 +148,11 @@ export default function Blog() {
                           {tag}
                         </span>
                       ))}
-                      <span className="w-[4px] h-[4px] rounded-full bg-[#CCCCCC]" />
+                      {(post.tags && post.tags.length > 0) && (
+                          <span className="w-[4px] h-[4px] rounded-full bg-[#CCCCCC]" />
+                      )}
                       <span className="text-[11px] text-[#666666] font-medium font-sans">
-                        {post.date}
+                        {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Recent'}
                       </span>
                     </div>
 
@@ -153,7 +161,7 @@ export default function Blog() {
                     </h3>
 
                     <p className="text-[13px] text-[#555555] leading-[1.6] mb-[24px] font-sans line-clamp-3">
-                      {post.description}
+                      {post.excerpt || post.metaDescription || "Read more about this topic..."}
                     </p>
                   </div>
 
@@ -254,7 +262,7 @@ export default function Blog() {
 
         <ViewMoreButton
           label="View All"
-          href="/blog"
+          href="/blogs"
           wrapperClassName="!mt-0 !justify-end"
         />
       </div>
@@ -267,7 +275,7 @@ export default function Blog() {
         >
           {displayPosts.map((post, index) => (
             <div
-              key={`${post.id}-${index}`}
+              key={`${post._id || post.url}-${index}`}
               className="flex-shrink-0 w-[220px] md:w-[300px] lg:w-[340px] group cursor-pointer"
               onMouseEnter={() => { pausedRef.current = true; }}
               onMouseLeave={() => { pausedRef.current = false; }}
@@ -275,8 +283,8 @@ export default function Blog() {
               {/* Image */}
               <div className="relative w-full h-[200px] md:h-[260px] lg:h-[300px] rounded-[16px] md:rounded-[24px] overflow-hidden mb-[14px] md:mb-[20px]">
                 <Image
-                  src={post.image}
-                  alt={`Blog post ${post.id}`}
+                  src={post.image || "/images/placeholder-blog.jpg"}
+                  alt={`Blog post ${post._id || post.url}`}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 220px, (max-width: 1024px) 300px, 340px"
@@ -285,7 +293,7 @@ export default function Blog() {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-[6px] md:gap-[8px] mb-[10px] md:mb-[14px]">
-                {post.tags.map((tag) => (
+                {(post.tags || []).map((tag) => (
                   <span
                     key={tag}
                     className="px-[10px] py-[4px] bg-[#F5F5F5] rounded-[6px] text-[11px] md:text-[13px] font-semibold text-[#666666] font-sans"
@@ -296,7 +304,7 @@ export default function Blog() {
               </div>
 
               {/* Title */}
-              <Link href={`/blogs/${post.slug}`} className="block">
+              <Link href={`/blogs/${post.url}`} className="block">
                 <h3 className="text-[15px] md:text-[20px] lg:text-[22px] font-bold text-[#111111] leading-[1.3] mb-[6px] md:mb-[10px] font-sans group-hover:text-[#660033] transition-colors line-clamp-2">
                   {post.title}
                 </h3>
@@ -304,7 +312,7 @@ export default function Blog() {
 
               {/* Description */}
               <p className="text-[12px] md:text-[14px] text-[#666666] leading-[1.6] font-sans line-clamp-2">
-                {post.description}
+                {post.excerpt || post.metaDescription || "Read more about this topic..."}
               </p>
             </div>
           ))}
