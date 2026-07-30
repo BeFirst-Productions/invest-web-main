@@ -19,7 +19,7 @@ export async function generateMetadata({ params }) {
 // SSG paths pre-generation
 export async function generateStaticParams() {
     try {
-        const res = await fetch('http://localhost:8080/public/v1/blog/get-blogs', { next: { revalidate: 60 } });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, { next: { revalidate: 60 } });
         const data = await res.json();
         
         if (data.success && data.data && data.data.length > 0) {
@@ -39,7 +39,7 @@ export async function generateStaticParams() {
 
 async function getBlogData(slug) {
     try {
-        const res = await fetch(`http://localhost:8080/public/v1/blog/get-blog/${slug}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blog/${slug}`, {
             next: { revalidate: 60 } 
         });
         const data = await res.json();
@@ -59,6 +59,7 @@ async function getBlogData(slug) {
             ...mockPost,
             url: mockPost.slug,
             description: `<p>${mockPost.description}</p>`, // Simple rich text fallback
+            createdAt: mockPost.date,
         };
     }
 

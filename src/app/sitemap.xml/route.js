@@ -90,7 +90,7 @@ export async function GET() {
 
   let blogRecords = '';
   try {
-    const res = await fetch('http://localhost:8080/public/v1/blog/get-blogs', { next: { revalidate: 3600 } });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, { next: { revalidate: 3600 } });
     const data = await res.json();
     if (data.success && data.data) {
       blogRecords = data.data.map((post) => `

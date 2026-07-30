@@ -6,6 +6,57 @@ import PricingCard from "@/components/ui/PricingCard";
 import { gsap } from "@/lib/gsap";
 import SplitText from "@/components/ui/SplitText";
 
+const fallbackPlans = [
+  {
+    id: "fallback-1",
+    title: "Ajman Nuventures Centre Free Zone",
+    description: "One of the most affordable free zones in the UAE",
+    price: "AED 4,888",
+    features: [
+      "Unlimited shareholders",
+      "Upto 10 business activities",
+      "Mix and match any activities",
+      "Trade License, Lease agreement, MOA",
+      "Fully digital process"
+    ],
+    featured: false,
+    ctaText: "Let's Do This",
+    ctaHref: "#contact"
+  },
+  {
+    id: "fallback-2",
+    title: "Meydan Free Zone",
+    description: "Dubai's most flexible and affordable free zone license.",
+    price: "AED 12,250",
+    features: [
+      "Add upto 5 business activitie",
+      "Add upto 5 shareholders",
+      "Trade license, lease agreement, MOA",
+      "Fully digital process"
+    ],
+    featured: true,
+    ctaText: "Let's Do This",
+    ctaHref: "#contact"
+  },
+  {
+    id: "fallback-3",
+    title: "Ras Al Khaimah Economic Zone",
+    description: "One of the best free zones in the UAE with world class facilities",
+    price: "AED 6,000",
+    features: [
+      "Upto 5 business activities in one license",
+      "Mix and match business activities",
+      "Upto 5 shareholders",
+      "Installment payment options available",
+      "Free access to flexi desk",
+      "Fully digital process"
+    ],
+    featured: false,
+    ctaText: "Let's Do This",
+    ctaHref: "#contact"
+  }
+];
+
 export default function Pricing() {
   const containerRef = useRef(null);
   const cardsRef = useRef([]);
@@ -15,9 +66,9 @@ export default function Pricing() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/public/v1/packages/common-packages`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/packages/common-packages`);
         const data = await res.json();
-        if (data.success && data.data) {
+        if (data.success && data.data && data.data.length > 0) {
           // Transform backend data to match the PricingCard props
           const formattedPlans = data.data.map((pkg, index) => ({
             id: pkg._id,
@@ -30,9 +81,12 @@ export default function Pricing() {
             ctaHref: pkg.ctaHref || "#contact"
           }));
           setPlans(formattedPlans);
+        } else {
+          setPlans(fallbackPlans);
         }
       } catch (err) {
         console.error("Failed to fetch packages:", err);
+        setPlans(fallbackPlans);
       } finally {
         setLoading(false);
       }

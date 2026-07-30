@@ -15,7 +15,7 @@ import { blogPosts as mockBlogPosts } from '@/data/blogData';
 // Fetch blogs from backend
 async function getBlogsData() {
     try {
-        const res = await fetch('http://localhost:8080/public/v1/blog/get-blogs', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, {
             next: { revalidate: 60 }
         });
         const data = await res.json();
@@ -27,7 +27,14 @@ async function getBlogsData() {
         console.error("Failed to fetch blogs:", error);
     }
     // Fallback to mock data
-    return mockBlogPosts;
+    return mockBlogPosts.map(post => ({
+        ...post,
+        url: post.slug,
+        _id: post.id,
+        excerpt: post.description,
+        metaDescription: post.description,
+        createdAt: post.date
+    }));
 }
 
 export default async function BlogsPage() {
