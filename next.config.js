@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 const nextConfig = {
-  trailingSlash: true,
+  trailingSlash: false,
   reactStrictMode: true,
   compress: true,
   images: {

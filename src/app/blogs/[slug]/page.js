@@ -49,7 +49,7 @@ async function getBlogData(slug) {
                 next: { revalidate: 60 }
             });
             const data = await res.json();
-
+            
             if (data.success && data.data && data.data.length > 0) {
                 return data.data[0];
             }

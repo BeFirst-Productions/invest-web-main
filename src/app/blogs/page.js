@@ -21,6 +21,7 @@ async function getBlogsData() {
                 next: { revalidate: 60 }
             });
             const data = await res.json();
+            console.log(data,"data");
             
             if (data.success && data.data && data.data.length > 0) {
                 return data.data;
