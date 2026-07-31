@@ -90,18 +90,22 @@ export async function GET() {
 
   let blogRecords = '';
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, { next: { revalidate: 3600 } });
-    const data = await res.json();
-    if (data.success && data.data) {
-      blogRecords = data.data.map((post) => `
-    <url>
-      <loc>${domain}/blogs/${post.url}</loc>
-      <lastmod>${currentDate}</lastmod>
-      <changefreq>weekly</changefreq>
-      <priority>0.8</priority>
-    </url>
-  `).join('');
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (baseUrl) {
+      const res = await fetch(`${baseUrl}public/v1/blog/get-blogs`, { next: { revalidate: 3600 } });
+      const data = await res.json();
+      if (data.success && data.data) {
+        blogRecords = data.data.map((post) => `
+      <url>
+        <loc>${domain}/blogs/${post.url}</loc>
+        <lastmod>${currentDate}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+      </url>
+    `).join('');
+      }
     }
+
   } catch (error) {
     console.error("Failed to fetch blogs for sitemap:", error);
   }

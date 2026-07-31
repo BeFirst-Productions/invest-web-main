@@ -15,13 +15,16 @@ import { blogPosts as mockBlogPosts } from '@/data/blogData';
 // Fetch blogs from backend
 async function getBlogsData() {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, {
-            next: { revalidate: 60 }
-        });
-        const data = await res.json();
-        
-        if (data.success && data.data && data.data.length > 0) {
-            return data.data;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (baseUrl) {
+            const res = await fetch(`${baseUrl}public/v1/blog/get-blogs`, {
+                next: { revalidate: 60 }
+            });
+            const data = await res.json();
+            
+            if (data.success && data.data && data.data.length > 0) {
+                return data.data;
+            }
         }
     } catch (error) {
         console.error("Failed to fetch blogs:", error);

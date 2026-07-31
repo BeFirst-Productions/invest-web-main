@@ -66,24 +66,27 @@ export default function Pricing() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/packages/common-packages`);
-        const data = await res.json();
-        if (data.success && data.data && data.data.length > 0) {
-          // Transform backend data to match the PricingCard props
-          const formattedPlans = data.data.map((pkg, index) => ({
-            id: pkg._id,
-            title: pkg.title,
-            description: pkg.description,
-            price: `AED ${Number(pkg.amount).toLocaleString()}`,
-            features: pkg.points,
-            featured: index === 1, // Make the middle card featured (maroon background)
-            ctaText: pkg.ctaText || "Let's Do This",
-            ctaHref: pkg.ctaHref || "#contact"
-          }));
-          setPlans(formattedPlans);
-        } else {
-          setPlans(fallbackPlans);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (baseUrl) {
+          const res = await fetch(`${baseUrl}public/v1/packages/common-packages`);
+          const data = await res.json();
+          if (data.success && data.data && data.data.length > 0) {
+            // Transform backend data to match the PricingCard props
+            const formattedPlans = data.data.map((pkg, index) => ({
+              id: pkg._id,
+              title: pkg.title,
+              description: pkg.description,
+              price: `AED ${Number(pkg.amount).toLocaleString()}`,
+              features: pkg.points,
+              featured: index === 1, // Make the middle card featured (maroon background)
+              ctaText: pkg.ctaText || "Let's Do This",
+              ctaHref: pkg.ctaHref || "#contact"
+            }));
+            setPlans(formattedPlans);
+            return;
+          }
         }
+        setPlans(fallbackPlans);
       } catch (err) {
         console.error("Failed to fetch packages:", err);
         setPlans(fallbackPlans);
