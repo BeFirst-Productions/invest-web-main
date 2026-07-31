@@ -19,12 +19,17 @@ export async function generateMetadata({ params }) {
 // SSG paths pre-generation
 export async function generateStaticParams() {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blogs`, { next: { revalidate: 60 } });
-        const data = await res.json();
-        if (data.success && data.data && data.data.length > 0) {
-            return data.data.map((post) => ({
-                slug: post.url || 'placeholder',
-            }));
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (baseUrl) {
+            const res = await fetch(`${baseUrl}public/v1/blog/get-blogs`, { next: { revalidate: 60 } });
+            const data = await res.json();
+            if (data.success && data.data && data.data.length > 0) {
+                return data.data.map((post) => ({
+                    slug: post.url || 'placeholder',
+                }));
+            }
+        } else {
+            console.warn("NEXT_PUBLIC_API_URL is undefined. Using mock data for static params.");
         }
     } catch (error) {
         console.error("Failed to fetch blogs for static params:", error);
@@ -38,13 +43,16 @@ export async function generateStaticParams() {
 
 async function getBlogData(slug) {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}public/v1/blog/get-blog/${slug}`, {
-            next: { revalidate: 60 }
-        });
-        const data = await res.json();
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (baseUrl) {
+            const res = await fetch(`${baseUrl}public/v1/blog/get-blog/${slug}`, {
+                next: { revalidate: 60 }
+            });
+            const data = await res.json();
 
-        if (data.success && data.data && data.data.length > 0) {
-            return data.data[0];
+            if (data.success && data.data && data.data.length > 0) {
+                return data.data[0];
+            }
         }
     } catch (error) {
         console.error("Failed to fetch blog post:", error);
